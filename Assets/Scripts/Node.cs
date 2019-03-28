@@ -11,148 +11,129 @@ public class Node : MonoBehaviour
     [SerializeField] private float _depthFall;
     [SerializeField] private float _depthDistance;
 
-    [SerializeField] private GameObject forwardNode;
-    [SerializeField] private GameObject backNode;
-    [SerializeField] private GameObject rightNode;
-    [SerializeField] private GameObject leftNode;
-
-    [SerializeField] private GameObject upForwardNode;
-    [SerializeField] private GameObject upBackNode;
-    [SerializeField] private GameObject upRightNode;
-    [SerializeField] private GameObject upLeftNode;
-
-    [SerializeField] private GameObject downForwardNode;
-    [SerializeField] private GameObject downBackNode;
-    [SerializeField] private GameObject downRightNode;
-    [SerializeField] private GameObject downLeftNode;
-
-
-    private void Start()
-    {
-        //forwardNode = CreateNode(Vector3.forward);
-        //backNode = CreateNode(Vector3.back);
-        //rightNode = CreateNode(Vector3.right);
-        //leftNode = CreateNode(Vector3.left);
-        //// UP //
-
-        //upForwardNode = CreateNode(Vector3.up * _jumpHeight +
-        //                           Vector3.forward * _distance);
-
-        //upBackNode = CreateNode(Vector3.up * _jumpHeight +
-        //                        Vector3.back * _distance);
-
-        //upRightNode = CreateNode(Vector3.up * _jumpHeight +
-        //                         Vector3.right * _distance);
-
-        //upLeftNode = CreateNode(Vector3.up * _jumpHeight +
-        //                        Vector3.left * _distance);
-
-        //// DOWN //
-
-        //downForwardNode = CreateNode(Vector3.down * _depthFall +
-        //                             Vector3.forward * _distance);
-
-        //downBackNode = CreateNode(Vector3.down * _depthFall +
-        //                          Vector3.back * _distance);
-
-        //downRightNode = CreateNode(Vector3.down * _depthFall +
-        //                           Vector3.right * _distance);
-
-        //downLeftNode = CreateNode(Vector3.down * _depthFall +
-        //                          Vector3.left * _distance);
-    }
+    [SerializeField] private List<GameObject> forwardNodes;
+    [SerializeField] private List<GameObject> backNodes;
+    [SerializeField] private List<GameObject> rightNodes;
+    [SerializeField] private List<GameObject> leftNodes;
 
     //private void Update()
     //{
-    //    CreateNode(Vector3.forward * _distance);
-    //    CreateNode(Vector3.back * _distance);
-        //    //Ray ray = new Ray(transform.position, Vector3.down * transform.localScale.y / 2);
-        //    //RaycastHit hit;
-        //    //if(Physics.Raycast(ray, out hit, _dist))
-        //    //{
-        //    //    transform.Translate(Vector3.down);
-        //    //}
+    //    forwardNodes = CreateNodes(Vector3.forward * _distance);
+    //    backNodes = CreateNodes(Vector3.back * _distance);
+    //    rightNodes = CreateNodes(Vector3.right * _distance);
+    //    leftNodes = CreateNodes(Vector3.left * _distance);
     //}
 
     private void OnCollisionEnter(Collision collision)
     {
         //Destroy(GetComponent<Rigidbody>());
 
-        forwardNode = CreateNode(Vector3.forward * _distance);
-        backNode = CreateNode(Vector3.back * _distance);
-        rightNode = CreateNode(Vector3.right * _distance);
-        leftNode = CreateNode(Vector3.left * _distance);
-
-        // UP //
-
-        upForwardNode = CreateNode(Vector3.up * _jumpHeight +
-                                   Vector3.forward * _jumpDistance);
-
-        upBackNode = CreateNode(Vector3.up * _jumpHeight +
-                                Vector3.back * _jumpDistance);
-
-        upRightNode = CreateNode(Vector3.up * _jumpHeight +
-                                 Vector3.right * _jumpDistance);
-
-        upLeftNode = CreateNode(Vector3.up * _jumpHeight +
-                                Vector3.left * _jumpDistance);
-
-        // DOWN //
-
-        downForwardNode = CreateNode(Vector3.down * _depthFall +
-                                     Vector3.forward * _distance);
-
-        downBackNode = CreateNode(Vector3.down * _depthFall +
-                                  Vector3.back * _distance);
-
-        downRightNode = CreateNode(Vector3.down * _depthFall +
-                                   Vector3.right * _distance);
-
-        downLeftNode = CreateNode(Vector3.down * _depthFall +
-                                  Vector3.left * _distance);
+        forwardNodes = CreateNodes(Vector3.forward * _distance);
+        backNodes = CreateNodes(Vector3.back * _distance);
+        rightNodes = CreateNodes(Vector3.right * _distance);
+        leftNodes = CreateNodes(Vector3.left * _distance);
 
         //Destroy(GetComponent<MeshRenderer>());
     }
 
-    //private IEnumerator CoroutineCreateNodes()
-    //{
-    //    while (forwardNode == null ||
-    //           backNode == null ||
-    //           rightNode == null ||
-    //           leftNode == null ||
-    //           upForwardNode == null ||
-    //           upBackNode == null ||
-    //           upRightNode == null ||
-    //           upLeftNode == null)
-    //    {
-    //        forwardNode = CreateNode(Vector3.forward * _distance);
-    //        backNode = CreateNode(Vector3.back * _distance);
-    //        rightNode = CreateNode(Vector3.right * _distance);
-    //        leftNode = CreateNode(Vector3.left * _distance);
-    //        yield return new WaitForFixedUpdate();
-    //    }
-    //}
-
-    private GameObject CreateNode(Vector3 newNodePosition)
+    private List<GameObject> CreateNodes(Vector3 newNodePosition)
     {
-        RaycastHit[] downHits = Physics.RaycastAll(transform.position + newNodePosition + transform.up * transform.localScale.y/2 * 1.01f, -transform.up, transform.localScale.y + 0.01f);
+        List<GameObject> listObjects = new List<GameObject>();
+        RaycastHit[] frameHits = Physics.RaycastAll(transform.position + newNodePosition +
+                                                    // С высоты на которую можно запрыгнуть
+                                                    transform.up * (_jumpHeight * 1.01f - transform.localScale.y / 2),
+                                                    -transform.up, _jumpHeight + _depthFall + 0.015f);
+        Debug.DrawRay(transform.position + newNodePosition +
+                      // С высоты на которую можно запрыгнуть
+                      transform.up * (_jumpHeight * 1.01f - transform.localScale.y / 2),
+                      -transform.up * (_jumpHeight + _depthFall + 0.015f),
+                      Color.red);
 
-        for (int i = 0; i < downHits.Length; i++)
+        for (int i = 0; i < frameHits.Length; i++)
         {
-            //Debug.Log(downHits[i].collider.name);
-            if (downHits[i].collider.tag == "Node")
+            if (frameHits[i].collider.tag == "Frame")
             {
-                return downHits[i].collider.gameObject;
+                bool isFrameBrake = false;
+                Vector3 vectorNewObject = transform.position + newNodePosition +
+                                          // Позиция Frame относительно Node
+                                          transform.up * (frameHits[i].collider.transform.position.y - transform.position.y) +
+                                          // Верхняя часть Frame относительно Node
+                                          transform.up * (frameHits[i].collider.transform.localScale.y / 2 + _nodePoint.transform.localScale.y / 2);
+
+                RaycastHit[] checkFrameHits1;
+                RaycastHit[] checkFrameHits2;
+
+                if (transform.position.y >= vectorNewObject.y)
+                {
+                    checkFrameHits1 = Physics.RaycastAll(transform.position, newNodePosition, newNodePosition.x + newNodePosition.z);
+                    Debug.DrawRay(transform.position, newNodePosition, Color.green);
+                    checkFrameHits2 = Physics.RaycastAll(transform.position + newNodePosition, -transform.up, transform.position.y - vectorNewObject.y);
+                    Debug.DrawRay(transform.position + newNodePosition, -transform.up * (transform.position.y - vectorNewObject.y), Color.green);
+                }
+                else
+                {
+                    checkFrameHits1 = Physics.RaycastAll(transform.position, transform.up, vectorNewObject.y - transform.position.y);
+                    Debug.DrawRay(transform.position, transform.up * (vectorNewObject.y - transform.position.y), Color.green);
+                    checkFrameHits2 = Physics.RaycastAll(transform.position + transform.up * (vectorNewObject.y - transform.position.y), newNodePosition, newNodePosition.x + newNodePosition.z);
+                    Debug.DrawRay(transform.position + transform.up * (vectorNewObject.y - transform.position.y), newNodePosition, Color.green);
+                }
+
+                for (int j = 0; j < checkFrameHits1.Length; j++)
+                {
+                    if (checkFrameHits1[j].collider.tag == "Frame")
+                    {
+                        isFrameBrake = true;
+                    }
+                }
+
+                for (int j = 0; j < checkFrameHits2.Length; j++)
+                {
+                    if (checkFrameHits2[j].collider.tag == "Frame")
+                    {
+                        isFrameBrake = true;
+                    }
+                }
+
+                if (isFrameBrake)
+                {
+                    continue;
+                }
+
+                RaycastHit hit;
+                Ray landRay = new Ray(transform.position + newNodePosition +
+                              // Позиция Frame относительно Node
+                              transform.up * (frameHits[i].collider.transform.position.y - transform.position.y) +
+                              // Верхняя часть Frame относительно Node
+                              transform.up * (frameHits[i].collider.transform.localScale.y / 2 - 0.01f),
+                              transform.up);
+
+                Debug.DrawRay(transform.position + newNodePosition +
+                              // Позиция Frame относительно Node
+                              transform.up * (frameHits[i].collider.transform.position.y - transform.position.y) +
+                              // Верхняя часть Frame относительно Node
+                              transform.up * (frameHits[i].collider.transform.localScale.y / 2 - 0.01f),
+                              transform.up * _nodePoint.transform.localScale.y,
+                              Color.blue);
+
+                // Проверяет присутствует ли сверху Node
+                if (Physics.Raycast(landRay, out hit, _nodePoint.transform.localScale.y))
+                {
+                    if (hit.collider.tag == _nodePoint.tag)
+                    {
+                        listObjects.Add(hit.collider.gameObject);
+                    }
+                }
+                else
+                {
+                    listObjects.Add(Instantiate(_nodePoint, transform.position + newNodePosition +
+                                              // Позиция Frame относительно Node
+                                              transform.up * (frameHits[i].collider.transform.position.y - transform.position.y) +
+                                              // Верхняя часть Frame относительно Node
+                                              transform.up * (frameHits[i].collider.transform.localScale.y / 2 + _nodePoint.transform.localScale.y / 2),
+                                              Quaternion.identity));
+                }
             }
         }
-
-        if(downHits.Length > 0)
-        {
-            return Instantiate(_nodePoint, transform.position + newNodePosition, Quaternion.identity);
-        }
-        else
-        {
-            return null;
-        }
+        return listObjects;
     }
 }
